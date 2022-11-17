@@ -1325,9 +1325,19 @@ class GPG(object):
         Returns:
             bool: ``True`` if it's a valid passphrase, else ``False``.
         """
+        return ('\n' not in passphrase and '\r' not in passphrase and '\x00' not in passphrase)
+
+    def assert_valid_passphrase(self, passphrase):
+        """
+        Raise exception if passphrase is invalid.
+
+        Args:
+            passphrase (str): The passphrase to test.
+        """
         if not isinstance(passphrase, str):
             raise TypeError('Passphrase must be a string')
-        return ('\n' not in passphrase and '\r' not in passphrase and '\x00' not in passphrase)
+        if not self.is_valid_passphrase(passphrase):
+            raise ValueError('Invalid passphrase')
 
     def sign_file(self,
                   fileobj_or_path,
@@ -1358,8 +1368,7 @@ class GPG(object):
 
             extra_args (list[str]): Additional arguments to pass to `gpg`.
         """
-        if passphrase and not self.is_valid_passphrase(passphrase):
-            raise ValueError('Invalid passphrase')
+        if passphrase: self.assert_valid_passphrase(passphrase)
         logger.debug('sign_file: %s', fileobj_or_path)
         if binary:  # pragma: no cover
             args = ['-s']
@@ -1497,8 +1506,7 @@ class GPG(object):
 
             extra_args (list[str]): Additional arguments to pass to `gpg`.
         """
-        if passphrase and not self.is_valid_passphrase(passphrase):  # pragma: no cover
-            raise ValueError('Invalid passphrase')
+        if passphrase: self.assert_valid_passphrase(passphrase)
         result = self.result_map['import'](self)
         logger.debug('import_keys: %r', key_data[:256])
         data = _make_binary_stream(key_data, self.encoding)
@@ -1592,8 +1600,7 @@ class GPG(object):
            the passphrase to go to gpg via pinentry, you should specify expect_passphrase=False. (It's only checked
            for GnuPG >= 2.1).
         """
-        if passphrase and not self.is_valid_passphrase(passphrase):  # pragma: no cover
-            raise ValueError('Invalid passphrase')
+        if passphrase: self.assert_valid_passphrase(passphrase)
         which = 'key'
         if secret:  # pragma: no cover
             if self.version >= (2, 1) and passphrase is None and expect_passphrase:
@@ -1657,8 +1664,7 @@ class GPG(object):
            the passphrase to go to gpg via pinentry, you should specify expect_passphrase=False. (It's only checked
            for GnuPG >= 2.1).
         """
-        if passphrase and not self.is_valid_passphrase(passphrase):  # pragma: no cover
-            raise ValueError('Invalid passphrase')
+        if passphrase: self.assert_valid_passphrase(passphrase)
         which = ''
         if secret:
             which = '-secret-key'
@@ -1934,8 +1940,7 @@ class GPG(object):
         if not master_key:  # pragma: no cover
             raise ValueError('No master key fingerprint specified')
 
-        if master_passphrase and not self.is_valid_passphrase(master_passphrase):  # pragma: no cover
-            raise ValueError('Invalid passphrase')
+        if master_passphrase: self.assert_valid_passphrase(master_passphrase)
 
         args = ['--quick-add-key', master_key, algorithm, usage, str(expire)]
 
@@ -1981,8 +1986,7 @@ class GPG(object):
 
             extra_args (list[str]): A list of additional arguments to pass to `gpg`.
         """
-        if passphrase and not self.is_valid_passphrase(passphrase):
-            raise ValueError('Invalid passphrase')
+        if passphrase: self.assert_valid_passphrase(passphrase)
         args = ['--encrypt']
         if symmetric:
             # can't be False or None - could be True or a cipher algo value
@@ -2085,8 +2089,7 @@ class GPG(object):
 
             extra_args (list[str]): A list of extra arguments to pass to `gpg`.
         """
-        if passphrase and not self.is_valid_passphrase(passphrase):
-            raise ValueError('Invalid passphrase')
+        if passphrase: self.assert_valid_passphrase(passphrase)
         args = ['--decrypt']
         if output:  # pragma: no cover
             # write the output to a file with the specified name
