@@ -1519,6 +1519,49 @@ class GPGTestCase(unittest.TestCase):
         finally:
             os.remove(fn)
 
+    def test_invalid_passphrase(self):
+        def assert_invalid_passphrase_raises(partial):
+            """
+            Test that invalid passphrases raise appropriate exceptions for the provided
+            partial function which takes a passphrase as its only argument.
+            """
+            with self.assertRaises(TypeError):
+                partial(b"invalid")
+            with self.assertRaises(ValueError):
+                partial("invalid\r")
+            with self.assertRaises(ValueError):
+                partial("invalid\n")
+            with self.assertRaises(ValueError):
+                partial("invalid\x00")
+
+        assert_invalid_passphrase_raises(
+            lambda passphrase: self.gpg.import_keys("foo", passphrase=passphrase)
+        )
+        assert_invalid_passphrase_raises(
+            lambda passphrase: self.gpg.delete_keys("foo", passphrase=passphrase),
+        )
+        assert_invalid_passphrase_raises(
+            lambda passphrase: self.gpg.export_keys("foo", passphrase=passphrase),
+        )
+        assert_invalid_passphrase_raises(
+            lambda passphrase: self.gpg.add_subkey("foo", master_passphrase=passphrase),
+        )
+        assert_invalid_passphrase_raises(
+            lambda passphrase: self.gpg.encrypt_file("foo", "bar", passphrase=passphrase),
+        )
+        assert_invalid_passphrase_raises(
+            lambda passphrase: self.gpg.encrypt("foo", "bar", passphrase=passphrase),
+        )
+        assert_invalid_passphrase_raises(
+            lambda passphrase: self.gpg.decrypt_file("foo", passphrase=passphrase),
+        )
+        assert_invalid_passphrase_raises(
+            lambda passphrase: self.gpg.decrypt("foo", passphrase=passphrase),
+        )
+        assert_invalid_passphrase_raises(
+            lambda passphrase: self.gpg.sign_file("foo", passphrase=passphrase),
+        )
+
 
 TEST_GROUPS = {
     'sign':

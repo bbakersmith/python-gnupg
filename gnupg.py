@@ -1326,7 +1326,7 @@ class GPG(object):
             bool: ``True`` if it's a valid passphrase, else ``False``.
         """
         if not isinstance(passphrase, str):
-            raise ValueError('Passphrase must be a string')
+            raise TypeError('Passphrase must be a string')
         return ('\n' not in passphrase and '\r' not in passphrase and '\x00' not in passphrase)
 
     def sign_file(self,
